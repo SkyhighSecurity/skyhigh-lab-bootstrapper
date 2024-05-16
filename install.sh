@@ -69,3 +69,5 @@ kubectl apply -f manifests/longhorn/longhorn.yml
 
 kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-operator.yaml
 kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-cr.yaml
+sleep 10
+kubectl apply -f manifests/cdi/cdi-uploadproxy-nodeport.yaml
