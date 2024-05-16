@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export KUBEVIRT_RELEASE=$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+export K3S_VERSION=v1.28.7+k3s1
+
 #Install tools 
 if command -v apt-get > /dev/null 2>&1; then
     #Running on apt-based system
@@ -19,6 +23,13 @@ else
     exit 1
 fi
 
+#Get virtualization status
+sudo virt-host-validate qemu
+
+#Disable apparmor (if enabled)
+sudo systemctl stop apparmor
+sudo systemctl disable apparmor
+
 #Install k3sup
 curl -sLS https://get.k3sup.dev | sh
 sudo install k3sup /usr/local/bin/
@@ -35,11 +46,16 @@ curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stabl
 sudo install kubectl /usr/local/bin
 
 #Install k3s kubernetes
-k3sup install --local --no-extras --k3s-version $K3S_VERSION --k3s-extra-args '--write-kubeconfig-mode=644 --flannel-backend=wireguard-native'
+k3sup install --local --k3s-version $K3S_VERSION --k3s-extra-args '--write-kubeconfig-mode=644 --disable traefik --flannel-backend=wireguard-native'
 echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
 sleep 10
 
 #Install multus
 kubectl apply -f manifests/multus/multus-daemonset-thick.yml
+#kubectl wait --for condition=Available daemonset.apps/kube-multus-ds -n kube-system --timeout=120s
 
 
+#Install kubevirt
+kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-operator.yaml
+kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-cr.yaml
+kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=120s
