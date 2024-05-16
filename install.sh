@@ -59,3 +59,6 @@ kubectl apply -f manifests/multus/multus-daemonset-thick.yml
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-operator.yaml
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-cr.yaml
 kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=120s
+
+#Install longhorn
+kubectl apply -f manifests/longhorn/longhorn.yml
