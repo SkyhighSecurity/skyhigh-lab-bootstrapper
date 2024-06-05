@@ -1,0 +1,75 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  annotations:
+    kubevirt.io/latest-observed-api-version: v1
+    kubevirt.io/storage-observed-api-version: v1
+  creationTimestamp: "2024-05-17T22:22:50Z"
+  finalizers:
+  - kubevirt.io/virtualMachineControllerFinalize
+  generation: 1
+  labels:
+    kubevirt-manager.io/managed: "true"
+    kubevirt.io/domain: ubuntu-cloudinit
+  name: ubuntu-cloudinit
+  namespace: ultimus
+  resourceVersion: "7260239"
+  uid: b8f9a2bc-f5a4-4928-8943-992027a5d213
+spec:
+  running: false
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        kubevirt-manager.io/managed: "true"
+        kubevirt.io/domain: ubuntu-cloudinit
+    spec:
+      architecture: amd64
+      domain:
+        cpu:
+          cores: 4
+          sockets: 1
+          threads: 1
+        devices:
+          disks:
+          - disk: {}
+            name: disk1
+          - disk:
+              bus: virtio
+            name: disk3
+          interfaces:
+          - masquerade: {}
+            name: net1
+          networkInterfaceMultiqueue: true
+        machine:
+          type: q35
+        resources:
+          requests:
+            memory: 8Gi
+      networks:
+      - name: net1
+        pod: {}
+      priorityClassName: vm-standard
+      volumes:
+      - dataVolume:
+          name: ultimus-ubuntu-cloudinit-disk1
+        name: disk1
+      - cloudInitNoCloud:
+          networkData: |
+            version: 1
+            config:
+                - type: physical
+                  name: enp1s0
+                  subnets:
+                  - type: dhcp
+                - type: nameserver
+                  address:
+                  - '8.8.8.8'
+                  - '8.8.4.4'
+          userData: |
+            #cloud-config
+            manage_etc_hosts: true
+            hostname: ubuntu-cloudinit
+            user: skyhighadmin
+            password: Skyhigh12345!
+        name: disk3

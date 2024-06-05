@@ -1,0 +1,68 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: opnsense
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: opnsense
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        devices:
+          disks:
+          - disk:
+              bus: virtio
+            name: disk0
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - bridge: {}
+            name: default
+          - bridge: {}
+            name: bridge1
+          - bridge: {}
+            name: bridge2
+          inputs:
+          - bus: usb
+            name: tablet
+            type: tablet
+          - bus: ps2
+            name: mouse
+            type: mouse
+          - bus: ps2
+            name: keyboard
+            type: keyboard
+          - sound:
+              model: ich6
+            name: sound
+          - memballoon:
+              model: virtio
+            name: memballoon0
+        resources:
+          requests:
+            memory: 2Gi
+      terminationGracePeriodSeconds: 0
+      volumes:
+      - dataVolume:
+          name: opnsense-dv
+        name: disk0
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            password: opnsense
+            chpasswd: { expire: False }
+        name: cloudinitdisk
+      networks:
+      - name: default
+        pod: {}
+      - name: bridge1
+        multus:
+          networkName: bridge1
+      - name: bridge2
+        multus:
+          networkName: bridge2
