@@ -19,16 +19,36 @@ spec:
         securityContext:
           privileged: true
         command: ["/bin/sh", "-c"]
-        args: 
+        args:
           - |
             #!/bin/sh
+            
+            # Function to detect the first physical Ethernet interface
+            detect_first_ethernet() {
+              for iface in $(ls /sys/class/net/ | grep -E '^eth|^ens|^eno|^enp'); do
+                if [ -d /sys/class/net/$iface/device ]; then
+                  echo $iface
+                  return
+                fi
+              done
+            }
+
+            # Detect the first physical Ethernet interface
+            PHY_IFACE=$(detect_first_ethernet)
+            
+            # Check if an interface was found
+            if [ -z "$PHY_IFACE" ]; then
+              echo "No physical Ethernet interface found."
+              exit 1
+            fi
+
             VXLAN_INTERFACE="vxlan2100"
             VXLAN_ID=2100
             VXLAN_PORT=2100
             BRIDGE="br2100"
 
             # Create VXLAN interface
-            ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dev eth0 dstport ${VXLAN_PORT}
+            ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dev ${PHY_IFACE} dstport ${VXLAN_PORT}
 
             # Bring up the VXLAN interface
             ip link set ${VXLAN_INTERFACE} up
@@ -40,4 +60,5 @@ spec:
             # Bring up the bridge
             ip link set ${BRIDGE} up
 
+            # Keep the container running
             sleep infinity
