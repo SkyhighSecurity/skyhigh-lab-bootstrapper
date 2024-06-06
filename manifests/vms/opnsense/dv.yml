@@ -2,6 +2,7 @@ apiVersion: cdi.kubevirt.io/v1beta1
 kind: DataVolume
 metadata:
   name: opnsense-dv
+  namespace: skyhighlabs
 spec:
   source:
     http:
@@ -11,5 +12,5 @@ spec:
     - ReadWriteOnce
     resources:
       requests:
-        storage: 10Gi
-    volumeMode: Filesystem
+        storage: 32Gi
+

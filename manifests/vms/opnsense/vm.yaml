@@ -2,6 +2,7 @@ apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: opnsense
+  namespace: skyhighlabs
 spec:
   running: false
   template:
@@ -23,26 +24,10 @@ spec:
           interfaces:
           - bridge: {}
             name: default
-          - bridge: {}
-            name: bridge1
-          - bridge: {}
-            name: bridge2
-          inputs:
-          - bus: usb
-            name: tablet
-            type: tablet
-          - bus: ps2
-            name: mouse
-            type: mouse
-          - bus: ps2
-            name: keyboard
-            type: keyboard
-          - sound:
-              model: ich6
-            name: sound
-          - memballoon:
-              model: virtio
-            name: memballoon0
+#          - bridge: {}
+#            name: bridge1
+#          - bridge: {}
+#            name: bridge2
         resources:
           requests:
             memory: 2Gi
@@ -60,9 +45,9 @@ spec:
       networks:
       - name: default
         pod: {}
-      - name: bridge1
-        multus:
-          networkName: bridge1
-      - name: bridge2
-        multus:
-          networkName: bridge2
+#      - name: bridge1
+#        multus:
+#          networkName: bridge1
+#      - name: bridge2
+#        multus:
+#          networkName: bridge2
