@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vxlan-configurator
+  labels:
+    app: vxlan
+spec:
+  selector:
+    matchLabels:
+      app: vxlan
+  template:
+    metadata:
+      labels:
+        app: vxlan
+    spec:
+      containers:
+      - name: vxlan
+        image: busybox:latest
+        securityContext:
+          privileged: true
+        command: ["/bin/sh", "-c"]
+        args: 
+          - |
+            #!/bin/sh
+            VXLAN_INTERFACE="vxlan2100"
+            VXLAN_ID=2100
+            VXLAN_PORT=2100
+            BRIDGE="br2100"
+
+            # Create VXLAN interface
+            ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dev eth0 dstport ${VXLAN_PORT}
+
+            # Bring up the VXLAN interface
+            ip link set ${VXLAN_INTERFACE} up
+
+            # Create a bridge and add the VXLAN interface to it
+            brctl addbr ${BRIDGE}
+            brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
+
+            # Bring up the bridge
+            ip link set ${BRIDGE} up
+
+            sleep infinity
