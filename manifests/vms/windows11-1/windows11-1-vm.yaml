@@ -24,7 +24,7 @@ spec:
           interfaces:
           - bridge: {}
             name: vxbr4201
-            model: e1000
+            macAddress: 52:54:00:c2:cd:a0
         firmware:
           bootloader:
             efi:
