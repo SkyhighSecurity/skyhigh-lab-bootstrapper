@@ -1,0 +1,53 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vxlan-configurator
+  labels:
+    app: vxlan
+spec:
+  schedule: "*/5 * * * *"  # Run every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: vxlan
+        spec:
+          containers:
+          - name: vxlan
+            image: busybox:latest
+            securityContext:
+              privileged: true
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                #!/bin/sh
+
+                VXLAN_INTERFACE="vxlan0"
+                VXLAN_ID=42
+                VXLAN_PORT=4789
+                BRIDGE="br0"
+
+                # Check if the VXLAN interface already exists
+                if ip link show ${VXLAN_INTERFACE} > /dev/null 2>&1; then
+                  echo "${VXLAN_INTERFACE} already exists. Skipping creation."
+                else
+                  # Create VXLAN interface without specifying a physical device
+                  ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dstport ${VXLAN_PORT}
+
+                  # Bring up the VXLAN interface
+                  ip link set ${VXLAN_INTERFACE} up
+
+                  # Create a bridge if it doesn't exist and add the VXLAN interface to it
+                  if ! brctl show ${BRIDGE} > /dev/null 2>&1; then
+                    brctl addbr ${BRIDGE}
+                  fi
+                  brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
+
+                  # Bring up the bridge
+                  ip link set ${BRIDGE} up
+
+                  echo "VXLAN interface ${VXLAN_INTERFACE} and bridge ${BRIDGE} configured."
+                fi
+
+          restartPolicy: OnFailure
