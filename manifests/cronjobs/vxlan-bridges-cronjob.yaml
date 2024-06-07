@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: vxlan-configurator
-        image: busybox:latest
+        image: bash:latest  # Use bash image
         securityContext:
           privileged: true
         volumeMounts:
@@ -25,21 +25,20 @@ spec:
           mountPath: /etc/cron.d
         - name: host-var-log
           mountPath: /var/log
-        command: ["/bin/sh", "-c"]
+        command: ["/bin/bash", "-c"]
         args:
           - |
-            #!/bin/sh
+            #!/bin/bash
 
             # Create the VXLAN setup script on the host
             cat << 'EOF' > /host/usr/local/bin/vxlan-setup.sh
-            #!/bin/sh
+            #!/bin/bash
 
             START=4200
             END=4209
             VXLAN_PORT=4790
 
-            i=\$START
-            while [ \$i -le \$END ]; do
+            for i in \$(seq \${START} \${END}); do
               VXLAN_INTERFACE="vxlan\${i}"
               VXLAN_ID=\${i}
               BRIDGE="vxbr\${i}"
@@ -65,7 +64,6 @@ spec:
 
                 echo "VXLAN interface \${VXLAN_INTERFACE} and bridge \${BRIDGE} configured."
               fi
-              i=\$(expr \$i + 1)
             done
             EOF
 
