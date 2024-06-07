@@ -34,32 +34,37 @@ spec:
             cat << 'EOF' > /host/usr/local/bin/vxlan-setup.sh
             #!/bin/sh
 
-            VXLAN_INTERFACE="vxlan0"
-            VXLAN_ID=42
-            VXLAN_PORT=4789
-            BRIDGE="br0"
+            START=4200
+            END=4209
+            VXLAN_PORT=4790
 
-            # Check if the VXLAN interface already exists
-            if ip link show ${VXLAN_INTERFACE} > /dev/null 2>&1; then
-              echo "${VXLAN_INTERFACE} already exists. Skipping creation."
-            else
-              # Create VXLAN interface without specifying a physical device
-              ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dstport ${VXLAN_PORT}
+            for i in \$(seq \${START} \${END}); do
+              VXLAN_INTERFACE="vxlan\${i}"
+              VXLAN_ID=\${i}
+              BRIDGE="vxbr\${i}"
 
-              # Bring up the VXLAN interface
-              ip link set ${VXLAN_INTERFACE} up
+              # Check if the VXLAN interface already exists
+              if ip link show \${VXLAN_INTERFACE} > /dev/null 2>&1; then
+                echo "\${VXLAN_INTERFACE} already exists. Skipping creation."
+              else
+                # Create VXLAN interface without specifying a physical device
+                ip link add \${VXLAN_INTERFACE} type vxlan id \${VXLAN_ID} dstport \${VXLAN_PORT}
 
-              # Create a bridge if it doesn't exist and add the VXLAN interface to it
-              if ! brctl show ${BRIDGE} > /dev/null 2>&1; then
-                brctl addbr ${BRIDGE}
+                # Bring up the VXLAN interface
+                ip link set \${VXLAN_INTERFACE} up
+
+                # Create a bridge if it doesn't exist and add the VXLAN interface to it
+                if ! brctl show \${BRIDGE} > /dev/null 2>&1; then
+                  brctl addbr \${BRIDGE}
+                fi
+                brctl addif \${BRIDGE} \${VXLAN_INTERFACE}
+
+                # Bring up the bridge
+                ip link set \${BRIDGE} up
+
+                echo "VXLAN interface \${VXLAN_INTERFACE} and bridge \${BRIDGE} configured."
               fi
-              brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
-
-              # Bring up the bridge
-              ip link set ${BRIDGE} up
-
-              echo "VXLAN interface ${VXLAN_INTERFACE} and bridge ${BRIDGE} configured."
-            fi
+            done
             EOF
 
             # Make the script executable
@@ -68,7 +73,6 @@ spec:
             # Add the cron job to the host's crontab directory with correct format and permissions
             echo "*/5 * * * * root /usr/local/bin/vxlan-setup.sh >> /var/log/vxlan-setup.log 2>&1" > /etc/cron.d/vxlan-setup
             chmod 0644 /etc/cron.d/vxlan-setup
-            crontab /etc/cron.d/vxlan-setup
 
             # Keep the container running to avoid restarting the DaemonSet
             sleep infinity
