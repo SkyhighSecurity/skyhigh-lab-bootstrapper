@@ -24,10 +24,10 @@ spec:
           interfaces:
           - bridge: {}
             name: default
-#          - bridge: {}
-#            name: bridge1
-#          - bridge: {}
-#            name: bridge2
+          - bridge: {}
+            name: vxbr4201
+          - bridge: {}
+            name: vxbr4202
         resources:
           requests:
             memory: 2Gi
@@ -45,9 +45,9 @@ spec:
       networks:
       - name: default
         pod: {}
-#      - name: bridge1
-#        multus:
-#          networkName: bridge1
-#      - name: bridge2
-#        multus:
-#          networkName: bridge2
+      - name: vxbr4201
+        multus:
+          networkName: vxbr4201
+      - name: vxbr4202
+        multus:
+          networkName: vxbr4202

@@ -1,0 +1,13 @@
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: vxbr4200-net-attach-def
+  namespace: default
+spec:
+  config: '{
+    "cniVersion": "0.3.1",
+    "type": "bridge",
+    "bridge": "vxbr4200"
+  }'
+
+
