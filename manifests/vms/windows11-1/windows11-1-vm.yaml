@@ -32,21 +32,30 @@ spec:
           acpi: {}
           apic: {}
           hyperv:
-            relaxed: true
-            vapic: true
+            relaxed: {}
             spinlocks:
-              retries: 8191
+              spinlocks: 8191
+            vapic: {}
+          smm: {}
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+          uuid: 21422753-bed5-4d81-bb66-3a1179a54b5a
+        resources:
+          requests:
+            memory: 6Gi
         clock:
+          timezone: "America/Chicago"
           timer:
-            rtc:
-              tickPolicy: catchup
-            pit:
-              tickPolicy: delay
             hpet:
               present: false
-            hyperv:
-              present: true
-          timeZone: "localtime"
+            hyperv: {}
+            pit:
+              tickPolicy: delay
+            rtc:
+              tickPolicy: catchup
+          utc: {}
         memory:
           guest: 8Gi
         resources:
