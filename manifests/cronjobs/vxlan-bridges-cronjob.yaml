@@ -38,7 +38,8 @@ spec:
             END=4209
             VXLAN_PORT=4790
 
-            for i in \$(seq \${START} \${END}); do
+            i=\$START
+            while [ \$i -le \$END ]; do
               VXLAN_INTERFACE="vxlan\${i}"
               VXLAN_ID=\${i}
               BRIDGE="vxbr\${i}"
@@ -64,6 +65,7 @@ spec:
 
                 echo "VXLAN interface \${VXLAN_INTERFACE} and bridge \${BRIDGE} configured."
               fi
+              i=\$((i + 1))
             done
             EOF
 
