@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: vxlan-configurator
-        image: bash:latest  # Use bash image
+        image: alpine:latest
         securityContext:
           privileged: true
         volumeMounts:
@@ -25,10 +25,13 @@ spec:
           mountPath: /etc/cron.d
         - name: host-var-log
           mountPath: /var/log
-        command: ["/bin/bash", "-c"]
+        command: ["/bin/sh", "-c"]
         args:
           - |
-            #!/bin/bash
+            #!/bin/sh
+
+            # Install bash
+            apk add --no-cache bash
 
             # Create the VXLAN setup script on the host
             cat << 'EOF' > /host/usr/local/bin/vxlan-setup.sh
@@ -38,31 +41,31 @@ spec:
             END=4209
             VXLAN_PORT=4790
 
-            for i in \$(seq \${START} \${END}); do
-              VXLAN_INTERFACE="vxlan\${i}"
-              VXLAN_ID=\${i}
-              BRIDGE="vxbr\${i}"
+            for i in $(seq $START $END); do
+              VXLAN_INTERFACE="vxlan${i}"
+              VXLAN_ID=${i}
+              BRIDGE="vxbr${i}"
 
               # Check if the VXLAN interface already exists
-              if ip link show \${VXLAN_INTERFACE} > /dev/null 2>&1; then
-                echo "\${VXLAN_INTERFACE} already exists. Skipping creation."
+              if ip link show ${VXLAN_INTERFACE} > /dev/null 2>&1; then
+                echo "${VXLAN_INTERFACE} already exists. Skipping creation."
               else
                 # Create VXLAN interface without specifying a physical device
-                ip link add \${VXLAN_INTERFACE} type vxlan id \${VXLAN_ID} dstport \${VXLAN_PORT}
+                ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dstport ${VXLAN_PORT}
 
                 # Bring up the VXLAN interface
-                ip link set \${VXLAN_INTERFACE} up
+                ip link set ${VXLAN_INTERFACE} up
 
                 # Create a bridge if it doesn't exist and add the VXLAN interface to it
-                if ! brctl show \${BRIDGE} > /dev/null 2>&1; then
-                  brctl addbr \${BRIDGE}
+                if ! brctl show ${BRIDGE} > /dev/null 2>&1; then
+                  brctl addbr ${BRIDGE}
                 fi
-                brctl addif \${BRIDGE} \${VXLAN_INTERFACE}
+                brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
 
                 # Bring up the bridge
-                ip link set \${BRIDGE} up
+                ip link set ${BRIDGE} up
 
-                echo "VXLAN interface \${VXLAN_INTERFACE} and bridge \${BRIDGE} configured."
+                echo "VXLAN interface ${VXLAN_INTERFACE} and bridge ${BRIDGE} configured."
               fi
             done
             EOF
