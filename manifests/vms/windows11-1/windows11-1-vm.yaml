@@ -1,0 +1,70 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: sseclient-win11
+  namespace: skyhighlabs
+spec:
+  running: false
+  template:
+    metadata:
+      labels:
+        kubevirt.io/domain: sseclient-win11
+    spec:
+      domain:
+        cpu:
+          cores: 4
+        devices:
+          disks:
+          - disk:
+              bus: sata
+            name: rootdisk
+          - disk:
+              bus: virtio
+            name: cloudinitdisk
+          interfaces:
+          - bridge: {}
+            name: vxbr4201
+        firmware:
+          bootloader:
+            efi:
+              secureBoot: true
+        features:
+          acpi: {}
+          apic: {}
+          hyperv:
+            relaxed: true
+            vapic: true
+            spinlocks:
+              retries: 8191
+        clock:
+          timer:
+            rtc:
+              tickPolicy: catchup
+            pit:
+              tickPolicy: delay
+            hpet:
+              present: false
+            hyperv:
+              present: true
+          timeZone: "localtime"
+        memory:
+          guest: 8Gi
+        resources:
+          requests:
+            memory: 8Gi
+      volumes:
+      - dataVolume:
+          name: sseclient-win11-dv
+        name: rootdisk
+      - cloudInitNoCloud:
+          userData: |
+            #cloud-config
+            users:
+              - name: your-username
+                ssh-authorized-keys:
+                  - ssh-rsa your-ssh-key
+        name: cloudinitdisk
+      networks:
+      - name: vxbr4201
+        multus:
+          networkName: vxbr4201

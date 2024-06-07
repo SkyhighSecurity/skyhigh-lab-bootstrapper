@@ -1,0 +1,14 @@
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: sseclient-win11-dv
+spec:
+  source:
+    http:
+      url: "https://s3.amazonaws.com/templates.byo.skyhighlabs.net/SSEClient-Win11-template-thin.qcow2"
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 85Gi
