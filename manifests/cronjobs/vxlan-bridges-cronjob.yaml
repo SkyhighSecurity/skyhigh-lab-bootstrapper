@@ -65,7 +65,7 @@ spec:
 
                 echo "VXLAN interface \${VXLAN_INTERFACE} and bridge \${BRIDGE} configured."
               fi
-              i=\$((i + 1))
+              i=\$(expr \$i + 1)
             done
             EOF
 
