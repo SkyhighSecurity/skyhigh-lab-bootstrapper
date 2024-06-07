@@ -24,6 +24,7 @@ spec:
           interfaces:
           - bridge: {}
             name: vxbr4201
+            model: e1000
         firmware:
           bootloader:
             efi:
