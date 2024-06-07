@@ -1,53 +1,72 @@
-apiVersion: batch/v1
-kind: CronJob
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
   name: vxlan-configurator
   labels:
     app: vxlan
 spec:
-  schedule: "*/5 * * * *"  # Run every 5 minutes
-  jobTemplate:
+  selector:
+    matchLabels:
+      app: vxlan
+  template:
+    metadata:
+      labels:
+        app: vxlan
     spec:
-      template:
-        metadata:
-          labels:
-            app: vxlan
-        spec:
-          containers:
-          - name: vxlan
-            image: busybox:latest
-            securityContext:
-              privileged: true
-            command: ["/bin/sh", "-c"]
-            args:
-              - |
-                #!/bin/sh
+      containers:
+      - name: vxlan-configurator
+        image: busybox:latest
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-filesystem
+          mountPath: /host
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            #!/bin/sh
 
-                VXLAN_INTERFACE="vxlan0"
-                VXLAN_ID=42
-                VXLAN_PORT=4789
-                BRIDGE="br0"
+            # Create the VXLAN setup script on the host
+            cat << 'EOF' > /host/usr/local/bin/vxlan-setup.sh
+            #!/bin/sh
 
-                # Check if the VXLAN interface already exists
-                if ip link show ${VXLAN_INTERFACE} > /dev/null 2>&1; then
-                  echo "${VXLAN_INTERFACE} already exists. Skipping creation."
-                else
-                  # Create VXLAN interface without specifying a physical device
-                  ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dstport ${VXLAN_PORT}
+            VXLAN_INTERFACE="vxlan200"
+            VXLAN_ID=4200
+            VXLAN_PORT=4790
+            BRIDGE="vxbr0"
 
-                  # Bring up the VXLAN interface
-                  ip link set ${VXLAN_INTERFACE} up
+            # Check if the VXLAN interface already exists
+            if ip link show ${VXLAN_INTERFACE} > /dev/null 2>&1; then
+              echo "${VXLAN_INTERFACE} already exists. Skipping creation."
+            else
+              # Create VXLAN interface without specifying a physical device
+              ip link add ${VXLAN_INTERFACE} type vxlan id ${VXLAN_ID} dstport ${VXLAN_PORT}
 
-                  # Create a bridge if it doesn't exist and add the VXLAN interface to it
-                  if ! brctl show ${BRIDGE} > /dev/null 2>&1; then
-                    brctl addbr ${BRIDGE}
-                  fi
-                  brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
+              # Bring up the VXLAN interface
+              ip link set ${VXLAN_INTERFACE} up
 
-                  # Bring up the bridge
-                  ip link set ${BRIDGE} up
+              # Create a bridge if it doesn't exist and add the VXLAN interface to it
+              if ! brctl show ${BRIDGE} > /dev/null 2>&1; then
+                brctl addbr ${BRIDGE}
+              fi
+              brctl addif ${BRIDGE} ${VXLAN_INTERFACE}
 
-                  echo "VXLAN interface ${VXLAN_INTERFACE} and bridge ${BRIDGE} configured."
-                fi
+              # Bring up the bridge
+              ip link set ${BRIDGE} up
 
-          restartPolicy: OnFailure
+              echo "VXLAN interface ${VXLAN_INTERFACE} and bridge ${BRIDGE} configured."
+            fi
+            EOF
+
+            # Make the script executable
+            chmod +x /host/usr/local/bin/vxlan-setup.sh
+
+            # Add the cron job to the host's crontab
+            (crontab -l 2>/dev/null | grep -v '/usr/local/bin/vxlan-setup.sh'; echo "*/5 * * * * /usr/local/bin/vxlan-setup.sh") | crontab -
+
+            # Keep the container running to avoid restarting the DaemonSet
+            sleep infinity
+      volumes:
+      - name: host-filesystem
+        hostPath:
+          path: /
