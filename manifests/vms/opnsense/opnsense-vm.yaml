@@ -24,10 +24,13 @@ spec:
           interfaces:
           - bridge: {}
             name: default
+            macAddress: 52:54:00:c2:bf:a0
           - bridge: {}
             name: vxbr4201
+            macAddress: 52:54:00:c2:bf:a1
           - bridge: {}
             name: vxbr4202
+            macAddress: 52:54:00:c2:bf:a2
         resources:
           requests:
             memory: 2Gi
