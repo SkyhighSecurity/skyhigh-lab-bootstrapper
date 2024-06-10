@@ -40,6 +40,9 @@ spec:
           volumeMounts:
             - name: mysql-persistent-storage
               mountPath: /var/lib/mysql
+            - name: config-volume
+              mountPath: /initdb.sql
+              subPath: initdb.sql
       volumes:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
