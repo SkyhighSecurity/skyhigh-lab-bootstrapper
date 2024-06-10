@@ -44,6 +44,10 @@ spec:
         - name: mysql-persistent-storage
           persistentVolumeClaim:
             claimName: mysql-pv-claim
+        - name: config-volume
+          configMap:
+            name: guacamole-config
+
 
 ---
 

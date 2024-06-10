@@ -1,0 +1,33 @@
+    -- Insert user entity
+    INSERT INTO guacamole_entity (name, type) VALUES ('testuser', 'USER');
+    SET @entity_id := LAST_INSERT_ID();
+
+    -- Insert user
+    INSERT INTO guacamole_user (entity_id, password_hash, password_salt, password_date, disabled) 
+    VALUES (@entity_id, UNHEX(SHA2(CONCAT('salt','Skyhigh12345!'), 256)), 'salt', NOW(), 0);
+
+    -- Create RDP connection
+    INSERT INTO guacamole_connection (connection_name, protocol) VALUES ('RDP Connection', 'rdp');
+    SET @rdp_connection_id := LAST_INSERT_ID();
+
+    -- Create SSH connection
+    INSERT INTO guacamole_connection (connection_name, protocol) VALUES ('SSH Connection', 'ssh');
+    SET @ssh_connection_id := LAST_INSERT_ID();
+
+    -- Add parameters for RDP connection
+    INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) 
+    VALUES (@rdp_connection_id, 'hostname', 'rdp-host'),
+           (@rdp_connection_id, 'port', '3389');
+
+    -- Add parameters for SSH connection
+    INSERT INTO guacamole_connection_parameter (connection_id, parameter_name, parameter_value) 
+    VALUES (@ssh_connection_id, 'hostname', 'ssh-host'),
+           (@ssh_connection_id, 'port', '22');
+
+    -- Grant user access to RDP connection
+    INSERT INTO guacamole_connection_permission (entity_id, connection_id, permission) 
+    VALUES (@entity_id, @rdp_connection_id, 'READ');
+
+    -- Grant user access to SSH connection
+    INSERT INTO guacamole_connection_permission (entity_id, connection_id, permission) 
+    VALUES (@entity_id, @ssh_connection_id, 'READ');
