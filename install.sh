@@ -50,9 +50,6 @@ kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVI
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-cr.yaml
 kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=120s
 
-#Install longhorn
-kubectl apply -f manifests/longhorn/longhorn.yml
-
 #Install containerized data importer
 kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-operator.yaml
 kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-cr.yaml
