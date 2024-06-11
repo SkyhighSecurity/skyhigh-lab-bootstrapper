@@ -33,30 +33,17 @@ sudo virt-host-validate qemu
 sudo systemctl stop apparmor
 sudo systemctl disable apparmor
 
-#Install k3sup
-curl -sLS https://get.k3sup.dev | sh
-sudo install k3sup /usr/local/bin/
-
-#Create bridges
-sudo nmcli con add type bridge con-name brdmz ifname brdmz
-sudo nmcli con up brdmz
-
-sudo nmcli con add type bridge con-name brlan ifname brlan
-sudo nmcli con up brlan
-
 #Install kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 sudo install kubectl /usr/local/bin
 
-#Install k3s kubernetes
-k3sup install --local --k3s-version $K3S_VERSION --k3s-extra-args '--write-kubeconfig-mode=644 --disable traefik --flannel-backend=wireguard-native'
-echo "export KUBECONFIG=/etc/rancher/k3s/k3s.yaml" >> ~/.bashrc
-sleep 10
+#Install k3s kubernetes and set permissions
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$K3S_VERSION INSTALL_K3S_EXEC="--disable=traefik" sh -
+sudo chmod 744 /etc/rancher/k3s/k3s.yaml
 
 #Install multus
 kubectl apply -f manifests/multus/multus-daemonset-thick.yml
 #kubectl wait --for condition=Available daemonset.apps/kube-multus-ds -n kube-system --timeout=120s
-
 
 #Install kubevirt
 kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-operator.yaml
