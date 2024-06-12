@@ -32,6 +32,9 @@ sudo virt-host-validate qemu
 #Disable apparmor (if enabled)
 sudo systemctl stop apparmor
 sudo systemctl disable apparmor
+sudo apt remove --assume-yes --purge apparmor snapd
+
+#Remove snap
 
 #Install kubectl
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -41,10 +44,12 @@ sudo install kubectl /usr/local/bin
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$K3S_VERSION INSTALL_K3S_EXEC="--disable=traefik" sh -
 sudo chmod 744 /etc/rancher/k3s/k3s.yaml
 touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
+kubectl delete sc local-path
 
 #Install multus
 kubectl apply -f manifests/multus/multus-daemonset-thick.yml
 #kubectl wait --for condition=Available daemonset.apps/kube-multus-ds -n kube-system --timeout=120s
+
 
 #Install ingress-nginx
 kubectl apply -f manifests/ingress-nginx/ingress-nginx.yaml
