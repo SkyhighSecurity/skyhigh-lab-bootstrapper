@@ -5,7 +5,7 @@ export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
 export K3S_VERSION=v1.28.7+k3s1
 export CDI_TAG=$(curl -s -w %{redirect_url} https://github.com/kubevirt/containerized-data-importer/releases/latest)
 export CDI_VERSION=$(echo ${CDI_TAG##*/})
-export VIRTCTL_VERSION==$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
+export VIRTCTL_VERSION=$(curl https://storage.googleapis.com/kubevirt-prow/release/kubevirt/kubevirt/stable.txt)
 
 #Install tools 
 if command -v apt-get > /dev/null 2>&1; then
@@ -46,14 +46,14 @@ kubectl apply -f manifests/multus/multus-daemonset-thick.yml
 #kubectl wait --for condition=Available daemonset.apps/kube-multus-ds -n kube-system --timeout=120s
 
 #Install kubevirt
-kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-operator.yaml
-kubectl apply -f https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-cr.yaml
+kubectl apply -f manifests/kubevirt/1-kubevirt-operator.yaml
+kubectl apply -f manifests/kubevirt/2-kubevirt-cr.yaml
 kubectl -n kubevirt wait kv kubevirt --for condition=Available --timeout=120s
 
 #Install containerized data importer
-kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-operator.yaml
-kubectl create -f https://github.com/kubevirt/containerized-data-importer/releases/download/$CDI_VERSION/cdi-cr.yaml
-kubectl apply -f manifests/cdi/cdi-uploadproxy-nodeport.yaml
+kubectl apply -f manifests/cdi/1-cdi-operator.yaml
+kubectl apply -f manifests/cdi/2-cdi-cr.yaml
+kubectl apply -f manifests/cdi/3-cdi-uploadproxy-nodeport.yaml
 
 #Install virtctl
 
