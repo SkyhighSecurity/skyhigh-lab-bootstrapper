@@ -40,10 +40,17 @@ sudo install kubectl /usr/local/bin
 #Install k3s kubernetes and set permissions
 curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION=$K3S_VERSION INSTALL_K3S_EXEC="--disable=traefik" sh -
 sudo chmod 744 /etc/rancher/k3s/k3s.yaml
+touch /var/lib/rancher/k3s/server/manifests/local-storage.yaml.skip
 
 #Install multus
 kubectl apply -f manifests/multus/multus-daemonset-thick.yml
 #kubectl wait --for condition=Available daemonset.apps/kube-multus-ds -n kube-system --timeout=120s
+
+#Install ingress-nginx
+kubectl apply -f manifests/ingress-nginx/ingress-nginx.yaml
+
+#Install longhorn
+kubectl apply -f manifests/longhorn/longhorn.yml
 
 #Install kubevirt
 kubectl apply -f manifests/kubevirt/1-kubevirt-operator.yaml
